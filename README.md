@@ -2,7 +2,6 @@
 
 Access is a web application for guided identity verification. Applicants can create an account, verify contact details, capture an identity document and selfie, resume an application, submit it for review, and check its status. The interface can show partner context while keeping the core journey partner neutral.
 
-This repository is a working integration with the Neuro Agent and Legal services. It is useful as an implementation example, but it is **not a standalone KYC backend**: account creation, private storage, verification, Legal submission, and identity transfer require a compatible service environment and credentials. Do not send real applicant data to a development or test tenant.
 
 ## Contents
 
