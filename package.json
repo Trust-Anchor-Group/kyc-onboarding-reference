@@ -10,7 +10,7 @@
     "test:agent-persistence": "node --test tests/agent-kyc-persistence/*.test.mjs"
   },
   "dependencies": {
-    "@noble/hashes": "^1.8.0",
+    "@noble/hashes": "^2.4.0",
     "agent-api": "github:Trust-Anchor-Group/AgentApiJavascript#f2c425287b740560b2201eb189c0890b159ccf67",
     "bcryptjs": "^3.0.2",
     "lucide-react": "^0.525.0",
