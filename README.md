@@ -42,13 +42,13 @@ The application can render without working Agent credentials, but account creati
 
 ### Legal submission origin
 
-The Legal integration validates the browser's `Referer`. Use a reachable HTTPS application origin for a sandbox browser test. Some service environments can resolve the default local HTTP origin; for those environments, start the app on port 80 and open <http://localhost>:
+The Legal integration validates the browser's `Referer`. Sandbox 1 accepted the default local HTTP origin in a complete browser run on 2026-09-24. To reproduce that local setup, start the app on port 80 and open <http://localhost>:
 
 ```bash
 npm run dev -- --port 80 --hostname localhost
 ```
 
-This may require permission to bind port 80 on your machine. The Sandbox 1 API check below used an HTTPS project URL as `Referer`; it did not establish that Sandbox 1 accepts a local browser origin. Changing `NEXT_PUBLIC_AGENT_API_URL` selects the remote Agent host, not the browser's `Referer`.
+This may require permission to bind port 80 on your machine. Use a reachable HTTPS application origin for a deployed or different Neuron environment. Changing `NEXT_PUBLIC_AGENT_API_URL` selects the remote Agent host, not the browser's `Referer`.
 
 ## Configuration
 
@@ -84,13 +84,13 @@ Use only synthetic applicants and keep the API key and secret in `.env.local` or
 
 A clean clone can install, build, and render with the example configuration, but the complete browser journey needs more than the Sandbox 1 API key:
 
-- Run the app from a reachable HTTPS origin for Legal submission. The usual <http://localhost:3000> development URL is useful for UI work but is not a verified Sandbox 1 submission origin.
+- For a local Sandbox 1 submission, use <http://localhost> on port 80 as tested below. The usual <http://localhost:3000> development URL is useful for UI work, but its Legal submission origin has not been verified. Use a reachable HTTPS origin for a deployed or different Neuron environment.
 - Use a fresh dedicated test inbox and phone number that can receive the sandbox's one-time codes. The app requires both codes before it saves the application in Agent Content. The sandbox enablement helper used by the API quickstart does **not** mark either contact as verified; it cannot replace these steps in the web app. If test codes are unavailable, arrange a test delivery method with the sandbox operator before starting a full browser run. Select the country and type the national phone number, or paste its full `+` international form; check the displayed last four digits before submitting.
 - Have fictional applicant details and permitted test document/selfie images ready. The app's capture and evidence-upload journey is separate from the small API check below.
 
-In this app, account creation is followed by phone-code verification and then email-code verification. Once both succeed and the Agent account check passes, the app creates its private application state and continues to personal details, document and selfie capture, address, review, and Legal submission. The dashboard then reads the Legal identity's status. The full browser path through these steps has not yet been validated on Sandbox 1; complete that check before presenting a fresh clone as an end-to-end verified example.
+In this app, account creation is followed by phone-code verification and then email-code verification. Once both succeed and the Agent account check passes, the app creates its private application state and continues to personal details, document and selfie capture, address, review, and Legal submission. The dashboard then reads the Legal identity's status.
 
-**Local browser check on 2026-09-24:** the app ran at <http://localhost> with Sandbox 1 credentials supplied to the process. A browser loaded the landing, onboarding, and login routes without JavaScript errors; an unauthenticated dashboard visit showed the login page. Account creation returned HTTP 200, and phone-code verification returned HTTP 200 and advanced to email verification. For a tagged test email address, `Agent/Account/VerifyEMail` returned HTTP 500 on the supplied code and again after a resend. This run did not establish whether the address format contributed to that failure. Personal details, document and selfie capture, private application storage, and Legal submission remain unverified in the browser. Resolve the email failure and complete those steps before describing the web app as verified end to end.
+**Browser verification on 2026-09-24:** the project owner completed the full app journey at <http://localhost> against Sandbox 1 and reached an **Approved** identity on the dashboard. The local server recorded successful account creation and private Agent Content requests during that run. A separate automated attempt using a `+`-tagged Gmail address reached phone verification but received HTTP 500 from `Agent/Account/VerifyEMail`, including after a resend. The cause of that failure was not isolated; use a fresh test mailbox and confirm its code delivery before relying on email aliases. The successful sandbox run verifies this integration path, not a production Neuron or the identity claims used in a sandbox.
 
 ### API-only check
 
@@ -108,7 +108,7 @@ The [sandbox quickstart](https://docs.neuro-tech.io/neuron-api/quickstart) demon
 | Phone and email | This app asks for both one-time codes. The public sandbox helper belongs to the separate API quickstart and does not verify either contact. | Complete the operator's required contact checks. This app currently requires both phone and email codes; confirm that the operator can deliver them. Do not use the sandbox-only enablement helper. |
 | API capabilities | Sandbox 1 returned the app's `ed448` signing algorithm during the API check. | Confirm support for `ed448`, private Agent Content/Vault storage, and the Legal endpoints used here before deployment. |
 | Legal application | Synthetic claims only. Sandbox 1 may approve an identity immediately after `ApplyId`, so the app checks the state before uploading evidence or requesting review. Approval does not validate the claims. | Query application attributes and confirm required properties, documents, filenames, and review method with the provider. Upload required evidence while the identity is `Created`, call `ReadyForApproval`, and observe the provider's decision. Do not assume automatic approval. |
-| App origin | Use a reachable HTTPS origin for a full Legal submission test; the API-only check used an HTTPS project URL as `Referer`. | Use the deployed app's HTTPS origin and confirm that the Neuron accepts its `Referer`. A local build passing does not prove this. |
+| App origin | A complete browser run reached `Approved` from <http://localhost> on port 80. The API-only check used an HTTPS project URL as `Referer`. | Use the deployed app's HTTPS origin and confirm that the Neuron accepts its `Referer`. A local build passing does not prove this. |
 | Data and operations | Use synthetic people and permitted test images. Sandbox status is only a development signal. | Apply the operator's privacy, security, retention, and identity-review requirements before handling real applicants. Keep production credentials in a deployment secret store. |
 
 The current form collects a fixed set of Legal properties and front/back document images plus a selfie. Adapt those fields and uploads if the production provider's contract differs. Do not move a sandbox account or its approved test identity into production. Configure each Neuron independently and repeat the browser journey against the intended environment before launch.
