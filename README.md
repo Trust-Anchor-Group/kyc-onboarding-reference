@@ -89,7 +89,6 @@ A clean clone can install, build, and render with the example configuration, but
 
 In this app, account creation is followed by phone-code verification and then email-code verification. Once both succeed and the Agent account check passes, the app creates its private application state and continues to personal details, document and selfie capture, address, review, and Legal submission. The dashboard then reads the Legal identity's status.
 
-**Browser verification on 2026-09-24:** the project owner completed the full app journey at <http://localhost> against Sandbox 1 and reached an **Approved** identity on the dashboard. The local server recorded successful account creation and private Agent Content requests during that run. A separate automated attempt using a `+`-tagged Gmail address reached phone verification but received HTTP 500 from `Agent/Account/VerifyEMail`, including after a resend. The cause of that failure was not isolated; use a fresh test mailbox and confirm its code delivery before relying on email aliases. The successful sandbox run verifies this integration path, not a production Neuron or the identity claims used in a sandbox.
 
 ### API-only check
 
