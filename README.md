@@ -10,6 +10,7 @@ This repository is a working integration with the Neuro Agent and Legal services
 - [Run locally](#run-locally)
 - [Configuration](#configuration)
 - [Sandbox 1 walkthrough](#sandbox-1-walkthrough)
+- [Sandbox and production Neurons](#sandbox-and-production-neurons)
 - [How the journey works](#how-the-journey-works)
 - [Project map](#project-map)
 - [Checks](#checks)
@@ -77,7 +78,7 @@ AGENT_API_KEY=<Sandbox 1 API key from the sandbox page>
 AGENT_SECRET=<Sandbox 1 API secret from the sandbox page>
 ```
 
-Use only synthetic applicants and keep the API key and secret in `.env.local` or a server-side secret store. The public sandbox account-enablement helper is for sandbox testing; it does not verify email or phone ownership and is not a production onboarding step.
+Use only synthetic applicants and keep the API key and secret in `.env.local` or a server-side secret store. The public sandbox account-enablement helper is for the API quickstart below. It does not verify email or phone ownership, and this web app does not use it to bypass contact verification.
 
 ### Before testing the web app
 
@@ -87,19 +88,37 @@ A clean clone can install, build, and render with the example configuration, but
 - Use a dedicated test inbox and phone number that can receive the sandbox's one-time codes. The app requires both codes before it saves the application in Agent Content. The sandbox enablement helper used by the API quickstart does **not** mark either contact as verified; it cannot replace these steps in the web app. If test codes are unavailable, arrange a test delivery method with the sandbox operator before starting a full browser run.
 - Have fictional applicant details and permitted test document/selfie images ready. The app's capture and evidence-upload journey is separate from the small API check below.
 
-The full web-app path through contact codes, capture, submission, and dashboard has not yet been validated on Sandbox 1. Treat that as a handoff check before telling another team that a fresh clone completes the entire journey.
+In this app, account creation is followed by phone-code verification and then email-code verification. Once both succeed and the Agent account check passes, the app creates its private application state and continues to personal details, document and selfie capture, address, review, and Legal submission. The dashboard then reads the Legal identity's status. The full browser path through these steps has not yet been validated on Sandbox 1; complete that check before presenting a fresh clone as an end-to-end verified example.
+
+### API-only check
 
 For a repeatable API check, use a fresh synthetic account and an HTTPS `Referer` that the sandbox can reach. In order: create the account with the Sandbox 1 API key, enable its **username** through the sandbox helper, log in, call `Account/Info`, retrieve signing algorithms and Legal application attributes, create a signing key, call `Legal/ApplyId`, then read `Legal/GetIdentity` until `Identity.status.state` is `Approved`. The quickstart supplies the exact request bodies and signature formulas. Sandbox approval can occur immediately after `ApplyId`; if it is already `Approved`, skip attachments and `ReadyForApproval`. An approved sandbox identity is test state, not verification of a real person.
 
 **Verified on 2026-09-24:** this API sequence returned HTTP 200 for account creation, enablement, login, account info, algorithm and application-attribute lookup, key creation, `ApplyId`, and `GetIdentity` on Sandbox 1. `GetIdentity` reported `Approved`. The app's hard-coded `ed448` signing algorithm was available. This checks the external API path; it does not certify the complete browser journey, contact-code delivery, camera capture, evidence upload, or a deployment's `Referer`.
 
+## Sandbox and production Neurons
+
+The [sandbox quickstart](https://docs.neuro-tech.io/neuron-api/quickstart) demonstrates test account enablement and automatic test-identity approval. The [provider-managed onboarding guide](https://docs.neuro-tech.io/neuron-api/guides/creating-an-account) and [Legal identity guide](https://docs.neuro-tech.io/neuron-api/guides/applying-for-a-legal-identity) describe the checks to confirm with an operator for another Neuron. The same app code needs environment-specific configuration and evidence requirements.
+
+| Concern | Sandbox 1 | Production Neuron |
+| --- | --- | --- |
+| Host and credentials | `sandbox1.neuro-tech.io` and credentials from the sandbox page. | The operator supplies its own HTTPS host, account-creation credentials, quota, and policies. Sign requests for that exact host; do not reuse sandbox credentials. |
+| Phone and email | This app asks for both one-time codes. The public sandbox helper belongs to the separate API quickstart and does not verify either contact. | Complete the operator's required contact checks. This app currently requires both phone and email codes; confirm that the operator can deliver them. Do not use the sandbox-only enablement helper. |
+| API capabilities | Sandbox 1 returned the app's `ed448` signing algorithm during the API check. | Confirm support for `ed448`, private Agent Content/Vault storage, and the Legal endpoints used here before deployment. |
+| Legal application | Synthetic claims only. Sandbox 1 may approve an identity immediately after `ApplyId`, so the app checks the state before uploading evidence or requesting review. Approval does not validate the claims. | Query application attributes and confirm required properties, documents, filenames, and review method with the provider. Upload required evidence while the identity is `Created`, call `ReadyForApproval`, and observe the provider's decision. Do not assume automatic approval. |
+| App origin | Use a reachable HTTPS origin for a full Legal submission test; the API-only check used an HTTPS project URL as `Referer`. | Use the deployed app's HTTPS origin and confirm that the Neuron accepts its `Referer`. A local build passing does not prove this. |
+| Data and operations | Use synthetic people and permitted test images. Sandbox status is only a development signal. | Apply the operator's privacy, security, retention, and identity-review requirements before handling real applicants. Keep production credentials in a deployment secret store. |
+
+The current form collects a fixed set of Legal properties and front/back document images plus a selfie. Adapt those fields and uploads if the production provider's contract differs. Do not move a sandbox account or its approved test identity into production. Configure each Neuron independently and repeat the browser journey against the intended environment before launch.
+
 ## How the journey works
 
 1. The visitor starts at `/` or resumes at `/login`.
-2. The onboarding flow gathers identity and address details, verifies contact information, and captures evidence.
-3. Account creation uses a server route that signs the request to Agent. The browser uses the Agent client for authenticated operations.
-4. After account verification, `state.json` in private Agent Content becomes the canonical KYC application state. It contains an allowlisted set of form fields and document descriptors. Document bytes live in separate private Content resources. A zero-tag Agent Vault record is used for discovery, not as a second copy of the form.
-5. Submission creates the Legal identity and attachments in the configured service. The dashboard reads the resulting status and supports the approved identity transfer flow.
+2. The applicant enters an email address, phone number, and password. The server route signs account creation with the Neuron API key and secret; the browser receives the account session.
+3. The applicant enters the phone code and then the email code. The app calls `VerifyPhoneNr` and `VerifyEMail`, checks the account state with `Account/Info`, and proceeds only after both contacts are verified. The sandbox's public enablement helper is not used here.
+4. The app creates `state.json` in private Agent Content, then collects personal and address details and captures the identity document and selfie. The state contains an allowlisted set of form fields and document descriptors; document bytes live in separate private Content resources. A zero-tag Agent Vault record is used for discovery, not as a second copy of the form.
+5. At submission, the app creates or reuses a signing key, reads Legal application attributes, and calls `ApplyId` for a new application. It checks the identity state: if already `Approved`, it finishes without an attachment or readiness call; otherwise it uploads the captured evidence and calls `ReadyForApproval`.
+6. The dashboard reads the Legal identity's current status and supports the approved identity transfer flow. Approval timing and evidence requirements depend on the configured Neuron and reviewer.
 
 The pre-account portion is ephemeral. New journeys do not create Redis sessions or store a KYC form draft in application-managed browser storage. Theme preferences and a minimal account-recovery hint are separate from the KYC application state. The storage and submission contracts are implemented in `src/app/lib/agentKycPersistence.mjs`, `agentKycDocuments.mjs`, and `legalApplyPreflight.mjs`.
 
