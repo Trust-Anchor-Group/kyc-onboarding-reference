@@ -119,8 +119,6 @@ The current form collects a fixed set of Legal properties and front/back documen
 5. At submission, the app creates or reuses a signing key, reads Legal application attributes, and calls `ApplyId` for a new application. It checks the identity state: if already `Approved`, it finishes without an attachment or readiness call; otherwise it uploads the captured evidence and calls `ReadyForApproval`.
 6. The dashboard reads the Legal identity's current status and supports the approved identity transfer flow. Approval timing and evidence requirements depend on the configured Neuron and reviewer.
 
-The pre-account portion is ephemeral. New journeys do not create Redis sessions or store a KYC form draft in application-managed browser storage. Theme preferences and a minimal account-recovery hint are separate from the KYC application state. The storage and submission contracts are implemented in `src/app/lib/agentKycPersistence.mjs`, `agentKycDocuments.mjs`, and `legalApplyPreflight.mjs`.
-
 ## Project map
 
 | Path | What it contains |
