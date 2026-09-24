@@ -79,6 +79,16 @@ AGENT_SECRET=<Sandbox 1 API secret from the sandbox page>
 
 Use only synthetic applicants and keep the API key and secret in `.env.local` or a server-side secret store. The public sandbox account-enablement helper is for sandbox testing; it does not verify email or phone ownership and is not a production onboarding step.
 
+### Before testing the web app
+
+A clean clone can install, build, and render with the example configuration, but the complete browser journey needs more than the Sandbox 1 API key:
+
+- Run the app from a reachable HTTPS origin for Legal submission. The usual <http://localhost:3000> development URL is useful for UI work but is not a verified Sandbox 1 submission origin.
+- Use a dedicated test inbox and phone number that can receive the sandbox's one-time codes. The app requires both codes before it saves the application in Agent Content. The sandbox enablement helper used by the API quickstart does **not** mark either contact as verified; it cannot replace these steps in the web app. If test codes are unavailable, arrange a test delivery method with the sandbox operator before starting a full browser run.
+- Have fictional applicant details and permitted test document/selfie images ready. The app's capture and evidence-upload journey is separate from the small API check below.
+
+The full web-app path through contact codes, capture, submission, and dashboard has not yet been validated on Sandbox 1. Treat that as a handoff check before telling another team that a fresh clone completes the entire journey.
+
 For a repeatable API check, use a fresh synthetic account and an HTTPS `Referer` that the sandbox can reach. In order: create the account with the Sandbox 1 API key, enable its **username** through the sandbox helper, log in, call `Account/Info`, retrieve signing algorithms and Legal application attributes, create a signing key, call `Legal/ApplyId`, then read `Legal/GetIdentity` until `Identity.status.state` is `Approved`. The quickstart supplies the exact request bodies and signature formulas. Sandbox approval can occur immediately after `ApplyId`; if it is already `Approved`, skip attachments and `ReadyForApproval`. An approved sandbox identity is test state, not verification of a real person.
 
 **Verified on 2026-09-24:** this API sequence returned HTTP 200 for account creation, enablement, login, account info, algorithm and application-attribute lookup, key creation, `ApplyId`, and `GetIdentity` on Sandbox 1. `GetIdentity` reported `Approved`. The app's hard-coded `ed448` signing algorithm was available. This checks the external API path; it does not certify the complete browser journey, contact-code delivery, camera capture, evidence upload, or a deployment's `Referer`.
