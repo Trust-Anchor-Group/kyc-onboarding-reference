@@ -9,6 +9,7 @@ This repository is a working integration with the Neuro Agent and Legal services
 - [Requirements](#requirements)
 - [Run locally](#run-locally)
 - [Configuration](#configuration)
+- [Sandbox 1 walkthrough](#sandbox-1-walkthrough)
 - [How the journey works](#how-the-journey-works)
 - [Project map](#project-map)
 - [Checks](#checks)
@@ -38,15 +39,15 @@ On Windows PowerShell, use `Copy-Item .env.example .env.local` in place of `cp`.
 
 The application can render without working Agent credentials, but account creation and the complete KYC journey cannot succeed without the external services. Local development must use a non-production tenant and synthetic identity data.
 
-### Legal submission from localhost
+### Legal submission origin
 
-The current Legal integration validates the browser's `Referer` and expects an origin it can resolve. For a local end-to-end Legal test, start the app on the default HTTP port and open <http://localhost>:
+The Legal integration validates the browser's `Referer`. Use a reachable HTTPS application origin for a sandbox browser test. Some service environments can resolve the default local HTTP origin; for those environments, start the app on port 80 and open <http://localhost>:
 
 ```bash
 npm run dev -- --port 80
 ```
 
-This may require permission to bind port 80 on your machine. Changing `NEXT_PUBLIC_AGENT_API_URL` does not change the browser's `Referer`; it selects the remote Agent host.
+This may require permission to bind port 80 on your machine. The Sandbox 1 API check below used an HTTPS project URL as `Referer`; it did not establish that Sandbox 1 accepts a local browser origin. Changing `NEXT_PUBLIC_AGENT_API_URL` selects the remote Agent host, not the browser's `Referer`.
 
 ## Configuration
 
@@ -62,6 +63,25 @@ Copy `.env.example` to `.env.local`. Next.js loads `.env.local` automatically, a
 | `NEXT_PUBLIC_ACCESS_PARTNER` | Browser | Optional partner name displayed in the entry experience. Omit for a generic entry. |
 
 `NEXT_PUBLIC_*` values are embedded in browser code and must never contain secrets. Keep `AGENT_API_KEY` and `AGENT_SECRET` server side. Configure deployment credentials in your hosting provider's secret store; never add them to the repository.
+
+## Sandbox 1 walkthrough
+
+Start with [Sandbox 1 on the Neuro sandbox page](https://blockathon.neuro-tech.io/sandbox.html#api-access) for its current host and participant API credentials. Follow the [Neuron API quickstart](https://docs.neuro-tech.io/neuron-api/quickstart) for the signed requests and account-to-identity sequence. The quickstart uses the shared `sandbox.neuro-tech.io` host in its examples; for this walkthrough, replace that host with **`sandbox1.neuro-tech.io` in both the request URL and every HMAC message**. Keep all requests on the same sandbox.
+
+To point this app at Sandbox 1, copy `.env.example` to `.env.local` and set:
+
+```dotenv
+NEXT_PUBLIC_AGENT_API_URL=https://sandbox1.neuro-tech.io
+NEXT_PUBLIC_AGENT_API_URI=sandbox1.neuro-tech.io
+AGENT_API_KEY=<Sandbox 1 API key from the sandbox page>
+AGENT_SECRET=<Sandbox 1 API secret from the sandbox page>
+```
+
+Use only synthetic applicants and keep the API key and secret in `.env.local` or a server-side secret store. The public sandbox account-enablement helper is for sandbox testing; it does not verify email or phone ownership and is not a production onboarding step.
+
+For a repeatable API check, use a fresh synthetic account and an HTTPS `Referer` that the sandbox can reach. In order: create the account with the Sandbox 1 API key, enable its **username** through the sandbox helper, log in, call `Account/Info`, retrieve signing algorithms and Legal application attributes, create a signing key, call `Legal/ApplyId`, then read `Legal/GetIdentity` until `Identity.status.state` is `Approved`. The quickstart supplies the exact request bodies and signature formulas. Sandbox approval can occur immediately after `ApplyId`; if it is already `Approved`, skip attachments and `ReadyForApproval`. An approved sandbox identity is test state, not verification of a real person.
+
+**Verified on 2026-09-24:** this API sequence returned HTTP 200 for account creation, enablement, login, account info, algorithm and application-attribute lookup, key creation, `ApplyId`, and `GetIdentity` on Sandbox 1. `GetIdentity` reported `Approved`. The app's hard-coded `ed448` signing algorithm was available. This checks the external API path; it does not certify the complete browser journey, contact-code delivery, camera capture, evidence upload, or a deployment's `Referer`.
 
 ## How the journey works
 

@@ -17,6 +17,7 @@ import { CheckCircle2, Clock3, Hourglass, ShieldCheck } from 'lucide-react'
 import { useAgentAPI } from '@/app/context/AgentAPIProvider'
 import { buildAccountLoginCandidates, passwordDigestForAccount } from '@/app/lib/agentAccountCredentials.mjs'
 import { AGENT_CONTENT } from '@/app/lib/agentKycPersistence.mjs'
+import { submitLegalEvidence } from '@/app/lib/legalSubmission.mjs'
 import { REAUTH, SUBMISSION, maySubmit, submissionStateFromDurableState } from '@/app/lib/submissionContinuity.mjs'
 import {
   buildLegalProperties,
@@ -183,7 +184,10 @@ const Step13Terms = () => {
         keyPasswordAvailable: Boolean(keyPassword),
         refererPresent: isLegalRefererUsable(window.location.origin),
         requestHostMatchesSignatureHost: AgentAPI.IO.GetHost?.() === new URL(apiUrl).host,
-        existingLegalApplicationAbsent: existingIdentities.length === 0,
+        existingLegalApplicationAbsent: existingIdentities.length === 0 || Boolean(
+          formData.legalId && existingIdentities.some((identity) =>
+            (identity?.id || identity?.Identity?.id) === formData.legalId)
+        ),
       })
       console.info('[KYC] LEGAL_APPLY_PREFLIGHT', {
         ...preflight,
@@ -211,53 +215,40 @@ const Step13Terms = () => {
         )
         currentLegalId = legalIdResult?.Identity?.id || legalIdResult?.id
         if (!currentLegalId) throw new Error('Agent API did not return a legal identity ID.')
-        await AgentAPI.Legal.GetIdentity(currentLegalId)
         await updateField('legalId', currentLegalId)
         const persisted = await forceSyncNow()
         if (!persisted) throw new Error('Could not persist the legal identity ID.')
       }
 
-      const legacyAttachment = (document) => document?.base64
-        ? { base64: document.base64, fileName: document.fileName, mimeType: document.contentType }
-        : null
-      const attachmentFor = async (slot) => persistenceMode === AGENT_CONTENT
-        ? await getLegalDocumentAttachment(slot)
-        : legacyAttachment(documents[slot])
-      const frontAttachment = await attachmentFor('frontPhoto')
-      const backAttachment = await attachmentFor('backPhoto')
-      const selfieAttachment = await attachmentFor('selfie')
-      if (!frontAttachment || !backAttachment || !selfieAttachment) throw new Error('Required document is missing or invalid!')
-      await AgentAPI.Legal.AddIdAttachment(
-        KEY_LOCAL_NAME,
-        KEY_NAMESPACE,
-        KEY_ID,
-        keyPassword,
-        passwordDigest,
-        currentLegalId,
-        frontAttachment.base64, frontAttachment.fileName, frontAttachment.mimeType
-      )
-
-      await AgentAPI.Legal.AddIdAttachment(
-        KEY_LOCAL_NAME,
-        KEY_NAMESPACE,
-        KEY_ID,
-        keyPassword,
-        passwordDigest,
-        currentLegalId,
-        backAttachment.base64, backAttachment.fileName, backAttachment.mimeType
-      )
-
-      await AgentAPI.Legal.AddIdAttachment(
-        KEY_LOCAL_NAME,
-        KEY_NAMESPACE,
-        KEY_ID,
-        keyPassword,
-        passwordDigest,
-        currentLegalId,
-        selfieAttachment.base64, selfieAttachment.fileName, selfieAttachment.mimeType
-      )
-
-      await AgentAPI.Legal.ReadyForApproval(KEY_LOCAL_NAME, KEY_NAMESPACE, KEY_ID, keyPassword, passwordDigest, currentLegalId)
+      stage = 'submit-evidence'
+      await submitLegalEvidence({
+        legalId: currentLegalId,
+        getIdentity: (legalId) => AgentAPI.Legal.GetIdentity(legalId),
+        uploadAttachments: async () => {
+          const legacyAttachment = (document) => document?.base64
+            ? { base64: document.base64, fileName: document.fileName, mimeType: document.contentType }
+            : null
+          const attachmentFor = async (slot) => persistenceMode === AGENT_CONTENT
+            ? await getLegalDocumentAttachment(slot)
+            : legacyAttachment(documents[slot])
+          const attachments = await Promise.all(['frontPhoto', 'backPhoto', 'selfie'].map(attachmentFor))
+          if (attachments.some((attachment) => !attachment)) throw new Error('Required document is missing or invalid!')
+          for (const attachment of attachments) {
+            await AgentAPI.Legal.AddIdAttachment(
+              KEY_LOCAL_NAME,
+              KEY_NAMESPACE,
+              KEY_ID,
+              keyPassword,
+              passwordDigest,
+              currentLegalId,
+              attachment.base64, attachment.fileName, attachment.mimeType
+            )
+          }
+        },
+        readyForApproval: () => AgentAPI.Legal.ReadyForApproval(
+          KEY_LOCAL_NAME, KEY_NAMESPACE, KEY_ID, keyPassword, passwordDigest, currentLegalId
+        ),
+      })
       try { await forceSyncNow({ state: 'SUBMITTED', step: 17, form: { consent: true } }) } catch {}
       setPassword('')
 
