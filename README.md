@@ -94,7 +94,6 @@ In this app, account creation is followed by phone-code verification and then em
 
 For a repeatable API check, use a fresh synthetic account and an HTTPS `Referer` that the sandbox can reach. In order: create the account with the Sandbox 1 API key, enable its **username** through the sandbox helper, log in, call `Account/Info`, retrieve signing algorithms and Legal application attributes, create a signing key, call `Legal/ApplyId`, then read `Legal/GetIdentity` until `Identity.status.state` is `Approved`. The quickstart supplies the exact request bodies and signature formulas. Sandbox approval can occur immediately after `ApplyId`; if it is already `Approved`, skip attachments and `ReadyForApproval`. An approved sandbox identity is test state, not verification of a real person.
 
-**Verified on 2026-09-24:** this API sequence returned HTTP 200 for account creation, enablement, login, account info, algorithm and application-attribute lookup, key creation, `ApplyId`, and `GetIdentity` on Sandbox 1. `GetIdentity` reported `Approved`. The app's hard-coded `ed448` signing algorithm was available. This checks the external API path; it does not certify the complete browser journey, contact-code delivery, camera capture, evidence upload, or a deployment's `Referer`.
 
 ## Sandbox and production Neurons
 
