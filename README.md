@@ -160,7 +160,6 @@ Deploy to a host that supports Next.js server routes and provides the environmen
 - Never commit `.env.local`, credentials, real identity documents, applicant data, or production screenshots. Use synthetic fixtures in tests and examples.
 - Browser-exposed `NEXT_PUBLIC_*` values and files under `public/` are available to visitors. Treat the public repository and its full Git history as readable by anyone if you publish it.
 - Review and rotate any credentials that may have appeared in previous commits before changing repository visibility. Check that you have redistribution rights for the code, fonts, logos, and other brand assets.
-- This repository currently has no license file. Public visibility alone does not grant reuse rights. The owners should add an approved license before inviting outside reuse.
 
 The `public/` directory includes Access branding, app store badges, and a font used by this app. Before adapting the example, replace these with images and brand assets you own or are licensed to use. Update this guidance after the team reviews the project license and asset rights.
 
