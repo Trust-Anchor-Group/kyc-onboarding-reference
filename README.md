@@ -111,4 +111,6 @@ Deploy to a host that supports Next.js server routes and provides the environmen
 - Review and rotate any credentials that may have appeared in previous commits before changing repository visibility. Check that you have redistribution rights for the code, fonts, logos, and other brand assets.
 - This repository currently has no license file. Public visibility alone does not grant reuse rights. The owners should add an approved license before inviting outside reuse.
 
+The `public/` directory includes Access branding, app store badges, and a font used by this app. Before adapting the example, replace these with images and brand assets you own or are licensed to use. Update this guidance after the team reviews the project license and asset rights.
+
 For changes, open a focused pull request with the relevant test results and a description of any effect on application state, external service calls, or applicant data handling.
