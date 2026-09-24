@@ -6,14 +6,11 @@ import { Button } from '@/components/ui/button'
 import LanguageToggle from './LanguageToggle'
 import { useLanguage, content } from '@/app/context/LanguageContext'
 import { useRouter } from 'next/navigation'
-import { Space_Grotesk } from 'next/font/google'
 import { ChevronLeft, CheckCircle2, Circle, Loader2, WifiOff, RefreshCw } from 'lucide-react'
 import { getOnboardingPhase, getOnboardingPhaseIndex, getPrimaryActionLabel, ONBOARDING_PHASES } from './onboardingJourney.mjs'
 import { AccessMark } from './AccessBrand'
 
 const totalSteps = 18
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], weight: ['400','500','600','700'], display: 'swap' })
-
 export default function StepperLayout({
   titleKey,
   title,
@@ -228,7 +225,7 @@ export default function StepperLayout({
           <section>
             {headerIcon && <div className="mb-5">{headerIcon}</div>}
 
-            <h1 className={`${spaceGrotesk.className} max-w-2xl text-[2rem] font-semibold leading-[1.04] tracking-[-0.035em] sm:text-5xl`}>
+            <h1 className="max-w-2xl text-[2rem] font-semibold leading-[1.04] tracking-[-0.035em] sm:text-5xl">
               {title || (titleKey ? t.steps?.[titleKey] : '')}
             </h1>
 
