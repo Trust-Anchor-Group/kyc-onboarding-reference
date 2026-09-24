@@ -156,12 +156,24 @@ const Step5VerifyPhone = () => {
         statusMessage: err?.statusMessage,
       })
       const isTimeout = String(err?.message || '').includes('TIMEOUT')
+      const isServiceFailure = Number(err?.statusCode) >= 500
+      const retryableFailure = isTimeout || isServiceFailure
+      const serviceMessage = t.errors?.verificationUnavailable || content.en.errors.verificationUnavailable
+      const failureMessage = isTimeout
+        ? (t.errors?.networkTimeout || serviceMessage)
+        : isServiceFailure
+          ? serviceMessage
+          : (t.errors?.invalidPhoneCode || 'Invalid code or already verified.')
       show({
-        title: isTimeout
-          ? (t.errors?.networkTimeout || 'Network is taking longer than expected. Please try again.')
-          : (t.errors?.invalidPhoneCode || 'Invalid code or already verified.'),
+        title: failureMessage,
         variant: 'error',
       })
+      if (retryableFailure) {
+        setRetryHint(serviceMessage)
+        setCode('')
+        submittedCodeRef.current = ''
+        return
+      }
       if (!hasUsedRetry) {
         setHasUsedRetry(true)
         setRetryHint(t.errors?.oneMoreAttempt || 'Incorrect code. You have one more try before resending.')
@@ -191,6 +203,7 @@ const Step5VerifyPhone = () => {
       setResendSeconds(RESEND_INTERVAL);
       sessionStorage.setItem('phoneResendTimestamp', String(Date.now()));
       setCode('')
+      submittedCodeRef.current = ''
       setError(false)
   setHasUsedRetry(false)
   try { sessionStorage.removeItem(`phoneRetryUsed:${sessionId || 'default'}`) } catch {}

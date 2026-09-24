@@ -45,7 +45,7 @@ The application can render without working Agent credentials, but account creati
 The Legal integration validates the browser's `Referer`. Use a reachable HTTPS application origin for a sandbox browser test. Some service environments can resolve the default local HTTP origin; for those environments, start the app on port 80 and open <http://localhost>:
 
 ```bash
-npm run dev -- --port 80
+npm run dev -- --port 80 --hostname localhost
 ```
 
 This may require permission to bind port 80 on your machine. The Sandbox 1 API check below used an HTTPS project URL as `Referer`; it did not establish that Sandbox 1 accepts a local browser origin. Changing `NEXT_PUBLIC_AGENT_API_URL` selects the remote Agent host, not the browser's `Referer`.
@@ -85,10 +85,12 @@ Use only synthetic applicants and keep the API key and secret in `.env.local` or
 A clean clone can install, build, and render with the example configuration, but the complete browser journey needs more than the Sandbox 1 API key:
 
 - Run the app from a reachable HTTPS origin for Legal submission. The usual <http://localhost:3000> development URL is useful for UI work but is not a verified Sandbox 1 submission origin.
-- Use a dedicated test inbox and phone number that can receive the sandbox's one-time codes. The app requires both codes before it saves the application in Agent Content. The sandbox enablement helper used by the API quickstart does **not** mark either contact as verified; it cannot replace these steps in the web app. If test codes are unavailable, arrange a test delivery method with the sandbox operator before starting a full browser run.
+- Use a fresh dedicated test inbox and phone number that can receive the sandbox's one-time codes. The app requires both codes before it saves the application in Agent Content. The sandbox enablement helper used by the API quickstart does **not** mark either contact as verified; it cannot replace these steps in the web app. If test codes are unavailable, arrange a test delivery method with the sandbox operator before starting a full browser run. Select the country and type the national phone number, or paste its full `+` international form; check the displayed last four digits before submitting.
 - Have fictional applicant details and permitted test document/selfie images ready. The app's capture and evidence-upload journey is separate from the small API check below.
 
 In this app, account creation is followed by phone-code verification and then email-code verification. Once both succeed and the Agent account check passes, the app creates its private application state and continues to personal details, document and selfie capture, address, review, and Legal submission. The dashboard then reads the Legal identity's status. The full browser path through these steps has not yet been validated on Sandbox 1; complete that check before presenting a fresh clone as an end-to-end verified example.
+
+**Local browser check on 2026-09-24:** the app ran at <http://localhost> with Sandbox 1 credentials supplied to the process. A browser loaded the landing, onboarding, and login routes without JavaScript errors; an unauthenticated dashboard visit showed the login page. Account creation returned HTTP 200, and phone-code verification returned HTTP 200 and advanced to email verification. For a tagged test email address, `Agent/Account/VerifyEMail` returned HTTP 500 on the supplied code and again after a resend. This run did not establish whether the address format contributed to that failure. Personal details, document and selfie capture, private application storage, and Legal submission remain unverified in the browser. Resolve the email failure and complete those steps before describing the web app as verified end to end.
 
 ### API-only check
 

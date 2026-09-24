@@ -112,6 +112,16 @@ export default function SecureVerificationWorkspace() {
     updateField('phone', value ? `+${String(value).replace(/\D/g, '')}` : '')
   }
 
+  const handlePhonePaste = (event) => {
+    const pasted = event.clipboardData?.getData('text')?.trim() || ''
+    const digits = pasted.replace(/\D/g, '')
+    if (!pasted.startsWith('+') || !/^\d{8,15}$/.test(digits)) return
+    event.preventDefault()
+    const number = `+${digits}`
+    setSelectedCountry(initialCountryFor(number))
+    updateField('phone', number)
+  }
+
   return (
     <StepperLayout
       title={copy.title}
@@ -169,6 +179,7 @@ export default function SecureVerificationWorkspace() {
                 autoComplete: 'tel',
                 inputMode: 'tel',
                 'aria-label': copy.phone,
+                onPaste: handlePhonePaste,
               }}
             />
           </div>

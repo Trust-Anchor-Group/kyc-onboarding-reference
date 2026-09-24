@@ -1229,28 +1229,46 @@ Object.entries(entryExperienceCopy).forEach(([language, copy]) => {
   content[language].access.entry = copy
 })
 
+const verificationUnavailableCopy = {
+  en: 'The verification service could not complete the request. Please try again later.',
+  sv: 'Verifieringstjänsten kunde inte slutföra begäran. Försök igen senare.',
+  fr: 'Le service de vérification n’a pas pu terminer la demande. Réessayez plus tard.',
+  es: 'El servicio de verificación no pudo completar la solicitud. Inténtalo de nuevo más tarde.',
+  pt: 'O serviço de verificação não conseguiu concluir a solicitação. Tente novamente mais tarde.',
+  ar: 'تعذّر على خدمة التحقق إكمال الطلب. يُرجى المحاولة لاحقًا.',
+}
+Object.entries(verificationUnavailableCopy).forEach(([language, message]) => {
+  content[language].errors.verificationUnavailable = message
+})
+
 // --- Create the context ---
 const LanguageContext = createContext()
 
 // --- Provider wrapper ---
 export const LanguageProvider = ({ children }) => {
-  const getDefaultLanguage = () => {
-    if (typeof window !== 'undefined' && window.navigator) {
-      const saved = window.localStorage.getItem('access-language')
-      if (LANGUAGES.some(({ code }) => code === saved)) return saved
-      const lang = (window.navigator.language || window.navigator.userLanguage || '').toLowerCase()
-      const detected = LANGUAGES.find(({ code }) => lang === code || lang.startsWith(`${code}-`))
-      if (detected) return detected.code
+  // Match the server's first render, then read the saved or browser language.
+  const [language, setLanguageState] = useState('en');
+
+  React.useEffect(() => {
+    let saved = null
+    try {
+      saved = window.localStorage.getItem('access-language')
+    } catch {
+      // Language selection still works when browser storage is disabled.
     }
-    return 'en';
-  };
+    if (LANGUAGES.some(({ code }) => code === saved)) {
+      setLanguageState(saved)
+      return
+    }
+    const lang = (window.navigator.language || window.navigator.userLanguage || '').toLowerCase()
+    const detected = LANGUAGES.find(({ code }) => lang === code || lang.startsWith(`${code}-`))
+    if (detected) setLanguageState(detected.code)
+  }, [])
 
-  const [language, setLanguageState] = useState(getDefaultLanguage);
-
-  if (typeof document !== 'undefined') {
+  React.useEffect(() => {
     document.documentElement.lang = language
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
-  }
+  }, [language])
 
   const setLanguage = (nextLanguage) => {
     setLanguageState((current) => {
