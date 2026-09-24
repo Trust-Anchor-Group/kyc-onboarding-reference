@@ -1,0 +1,35 @@
+{
+  "name": "kyc-onboarding-reference",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint src tests next.config.mjs",
+    "test:agent-persistence": "node --test tests/agent-kyc-persistence/*.test.mjs"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.8.0",
+    "agent-api": "github:Trust-Anchor-Group/AgentApiJavascript#f2c425287b740560b2201eb189c0890b159ccf67",
+    "bcryptjs": "^3.0.2",
+    "lucide-react": "^0.525.0",
+    "next": "15.5.26",
+    "postcss": "^8.5.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-phone-input-2": "^2.15.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4.1.11",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.26",
+    "tailwindcss": "^4.1.11"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.28"
+    }
+  }
+}
