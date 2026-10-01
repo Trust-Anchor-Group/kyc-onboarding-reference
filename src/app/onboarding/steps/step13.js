@@ -338,7 +338,7 @@ const Step13Terms = () => {
               {submissionFailureCode === 'LEGAL_ORIGIN_UNSUPPORTED' ? (
                 <p className="mt-1">
                   {copy.submission.savedSecureLink}
-                  {process.env.NODE_ENV !== 'production' && ' For local testing, use http://localhost without a port.'}
+                  {process.env.NODE_ENV !== 'production' && ' For the verified Sandbox 1 local setup, run npm run dev:legal-local and open http://localhost (no port). For other environments, open the app through its publicly reachable HTTPS URL.'}
                 </p>
               ) : (
                 <p className="mt-1">{copy.submission.savedRetry}</p>

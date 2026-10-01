@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:legal-local": "next dev --port 80 --hostname localhost",
     "build": "next build",
     "start": "next start",
     "lint": "eslint src tests next.config.mjs",

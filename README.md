@@ -41,13 +41,13 @@ The application can render without working Agent credentials, but account creati
 
 ### Legal submission origin
 
-The Legal integration validates the browser's `Referer`. Sandbox 1 accepted the default local HTTP origin in a complete browser run on 2026-09-24. To reproduce that local setup, start the app on port 80 and open <http://localhost>:
+The Legal integration validates the browser's `Referer` (the page origin sent with the request). For the verified Sandbox 1 local setup, use exactly <http://localhost> with no port in the address bar. The usual Next.js address, <http://localhost:3000>, has a different origin and is rejected. Run:
 
 ```bash
-npm run dev -- --port 80 --hostname localhost
+npm run dev:legal-local
 ```
 
-This may require permission to bind port 80 on your machine. Use a reachable HTTPS application origin for a deployed or different Neuron environment. Changing `NEXT_PUBLIC_AGENT_API_URL` selects the remote Agent host, not the browser's `Referer`.
+Open <http://localhost> after the server starts. Sandbox 1 accepted this default local HTTP origin in a complete browser run on 2026-09-24. Binding port 80 may require elevated permissions. For a deployed app or a different Agent/Neuron environment, use its publicly reachable HTTPS app URL instead. Changing `NEXT_PUBLIC_AGENT_API_URL` selects the remote Agent host; it does not change the browser's `Referer`.
 
 ## Configuration
 
